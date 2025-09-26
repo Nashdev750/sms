@@ -372,7 +372,8 @@ function setupKeyboardShortcuts() {
                         const currentSubjectIndex = subjects.findIndex(s => s.id == subjectMatch[1]);
                         if (currentSubjectIndex < subjects.length - 1) {
                             const nextSubject = subjects[currentSubjectIndex + 1];
-                            activeTable.selectCell(currentRowIndex, `subject_${nextSubject.id}`);
+                            const nextCell = row.getCell(`subject_${nextSubject.id}`);
+                            nextCell.select();
                         }
                     }
                 }
@@ -388,7 +389,8 @@ function setupKeyboardShortcuts() {
                         const currentSubjectIndex = subjects.findIndex(s => s.id == subjectMatch[1]);
                         if (currentSubjectIndex > 0) {
                             const prevSubject = subjects[currentSubjectIndex - 1];
-                            activeTable.selectCell(currentRowIndex, `subject_${prevSubject.id}`);
+                            const prevCell = row.getCell(`subject_${prevSubject.id}`);
+                            prevCell.select();
                         }
                     }
                 }
@@ -399,7 +401,9 @@ function setupKeyboardShortcuts() {
                     e.preventDefault();
                     // Move to next student in same subject (same as Ctrl+Down)
                     if (currentRowIndex < data.length - 1) {
-                        activeTable.selectCell(currentRowIndex + 1, col.getField());
+                        const nextRow = activeTable.getRowFromPosition(currentRowIndex + 1);
+                        const nextCell = nextRow.getCell(col.getField());
+                        nextCell.select();
                     }
                 }
                 break;
@@ -414,7 +418,8 @@ function setupKeyboardShortcuts() {
                         const currentSubjectIndex = subjects.findIndex(s => s.id == subjectMatch[1]);
                         if (currentSubjectIndex < subjects.length - 1) {
                             const nextSubject = subjects[currentSubjectIndex + 1];
-                            activeTable.selectCell(currentRowIndex, `subject_${nextSubject.id}`);
+                            const nextCell = row.getCell(`subject_${nextSubject.id}`);
+                            nextCell.select();
                         }
                     }
                 }
