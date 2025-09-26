@@ -1,0 +1,1626 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2><i class="fas fa-table me-2"></i>Grade Entry - Grade <%= classLevel %></h2>
+        <p class="text-muted">Term <%= term %>, Academic Year <%= year %></p>
+    </div>
+    <div>
+        <a href="/dashboard/select-class" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>
+            Back
+        </a>
+    </div>
+</div>
+
+<!-- Excel-like Grade Entry Table -->
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">
+            <i class="fas fa-table me-2"></i>
+            Grade Entry Table
+            <span class="badge bg-primary ms-2" id="tableStatus">Ready</span>
+        </h5>
+        <div class="d-flex align-items-center">
+            <span class="me-3">
+                <i class="fas fa-users me-1"></i>
+                <strong><%= students.length %></strong> Students
+            </span>
+            <span class="me-3">
+                <i class="fas fa-book me-1"></i>
+                <strong><%= subjects.length %></strong> Subjects
+            </span>
+            <span class="me-3">
+                <i class="fas fa-chart-line me-1"></i>
+                <strong id="completionRate">0%</strong> Complete
+            </span>
+            <button type="button" class="btn btn-sm btn-primary" id="maximizeBtn" title="Maximize Table">
+                <i class="fas fa-expand me-1"></i>
+                Maximize
+            </button>
+        </div>
+    </div>
+    <div class="card-body p-0">
+        <div id="gradeTable" class="tabulator-container"></div>
+    </div>
+</div>
+
+<!-- Grade Entry Controls -->
+<div class="grade-controls mt-3 mb-4">
+    <div class="row align-items-center">
+        <div class="col-md-6">
+            <div class="d-flex align-items-center">
+                <label class="form-label me-3 mb-0"><strong>Quick Actions:</strong></label>
+                <button type="button" class="btn btn-sm btn-outline-primary me-2" id="fillZerosBtn">
+                    <i class="fas fa-zero me-1"></i>Fill Zeros
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-success me-2" id="fillRandomBtn">
+                    <i class="fas fa-random me-1"></i>Random Scores
+                </button>
+              <button type="button" class="btn btn-sm btn-outline-warning me-2" id="clearAllBtn">
+                  <i class="fas fa-eraser me-1"></i>Clear All
+              </button>
+              <button type="button" class="btn btn-sm btn-outline-info" id="shortcutsBtn" title="Show Keyboard Shortcuts">
+                  <i class="fas fa-keyboard me-1"></i>Shortcuts
+              </button>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="d-flex align-items-center justify-content-end">
+                <button type="button" class="btn btn-sm btn-outline-info me-2" id="autoRankBtn">
+                    <i class="fas fa-sort-numeric-down me-1"></i>
+                    Auto Rank
+                </button>
+                <button type="button" class="btn btn-export me-2" id="exportBtn">
+                    <i class="fas fa-file-excel me-2"></i>
+                    Export to Excel
+                </button>
+                <button type="button" class="btn btn-save me-2" id="saveBtn">
+                    <i class="fas fa-save me-2"></i>
+                    Save Grades
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <h3 class="stats-number" id="totalStudents"><%= students.length %></h3>
+                <h6 class="card-title">Total Students</h6>
+                <p class="card-text">
+                    <small class="text-muted">Grade <%= classLevel %></small>
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <h3 class="stats-number" id="totalSubjects"><%= subjects.length %></h3>
+                <h6 class="card-title">Subjects</h6>
+                <p class="card-text">
+                    <small class="text-muted">Available for grading</small>
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <h3 class="stats-number" id="averageScore">0.00</h3>
+                <h6 class="card-title">Average Score</h6>
+                <p class="card-text">
+                    <small class="text-muted">Class average</small>
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stats-card">
+            <div class="card-body text-center">
+                <h3 class="stats-number" id="completionRateCard">0%</h3>
+                <h6 class="card-title">Completion</h6>
+                <p class="card-text">
+                    <small class="text-muted">Grades entered</small>
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Grade Entry Form (Hidden) -->
+<form id="gradeForm" method="POST" action="/grades/save" style="display: none;">
+    <input type="hidden" name="class_level" value="<%= classLevel %>">
+    <input type="hidden" name="term" value="<%= term %>">
+    <input type="hidden" name="year" value="<%= year %>">
+    <div id="gradeInputs"></div>
+</form>
+
+<!-- Loading Overlay -->
+<div id="loadingOverlay" class="loading-overlay" style="display: none;">
+    <div class="loading-content">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-3">Processing grades...</p>
+    </div>
+</div>
+
+<!-- Fullscreen Table Overlay -->
+<div id="fullscreenOverlay" class="fullscreen-overlay" style="display: none;">
+    <div class="fullscreen-header">
+        <h4 class="mb-0">
+            <i class="fas fa-table me-2"></i>
+            Grade Entry Table - Fullscreen Mode
+            <span class="badge bg-primary ms-2" id="fullscreenTableStatus">Ready</span>
+        </h4>
+        <div class="d-flex align-items-center">
+            <span class="me-3">
+                <i class="fas fa-users me-1"></i>
+                <strong><%= students.length %></strong> Students
+            </span>
+            <span class="me-3">
+                <i class="fas fa-book me-1"></i>
+                <strong><%= subjects.length %></strong> Subjects
+            </span>
+            <span class="me-3">
+                <i class="fas fa-chart-line me-1"></i>
+                <strong id="fullscreenCompletionRate">0%</strong> Complete
+            </span>
+            <button type="button" class="btn btn-sm btn-outline-secondary me-2" id="minimizeBtn" title="Exit Fullscreen">
+                <i class="fas fa-compress me-1"></i>
+                Exit Fullscreen
+            </button>
+            <button type="button" class="btn btn-sm btn-export me-2" id="fullscreenExportBtn">
+                <i class="fas fa-file-excel me-1"></i>
+                Export
+            </button>
+            <button type="button" class="btn btn-sm btn-save" id="fullscreenSaveBtn">
+                <i class="fas fa-save me-1"></i>
+                Save
+            </button>
+        </div>
+    </div>
+    <div class="fullscreen-table-container">
+        <div id="fullscreenGradeTable" class="fullscreen-tabulator-container"></div>
+    </div>
+</div>
+
+<!-- Include Tabulator CSS and JS -->
+<link href="https://unpkg.com/tabulator-tables@5.5.2/dist/css/tabulator_bootstrap5.min.css" rel="stylesheet">
+<script type="text/javascript" src="https://unpkg.com/tabulator-tables@5.5.2/dist/js/tabulator.min.js"></script>
+
+<!-- Include XLSX library for Excel export -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+// Fallback for XLSX library
+if (typeof XLSX === 'undefined') {
+    console.warn('XLSX library failed to load from CDN, trying alternative...');
+    // Try alternative CDN
+    const script = document.createElement('script');
+    script.src = 'https://unpkg.com/xlsx@0.18.5/dist/xlsx.full.min.js';
+    script.onload = function() {
+        console.log('XLSX library loaded from alternative CDN');
+    };
+    script.onerror = function() {
+        console.error('Failed to load XLSX library from all sources');
+    };
+    document.head.appendChild(script);
+}
+</script>
+
+<script>
+// Global variables
+let table;
+let fullscreenTable;
+let tableData = [];
+const students = <%- JSON.stringify(students) %>;
+const subjects = <%- JSON.stringify(subjects) %>;
+const gradeMap = <%- JSON.stringify(gradeMap || {}) %>;
+const classLevel = '<%= classLevel %>';
+const term = '<%= term %>';
+const year = '<%= year %>';
+
+// Initialize when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Junior Secondary Grading System initialized successfully!');
+    
+    // Wait for Tabulator to load
+    if (typeof Tabulator !== 'undefined') {
+        initializeTable();
+    } else {
+        // Retry after a short delay
+        setTimeout(function() {
+            if (typeof Tabulator !== 'undefined') {
+                initializeTable();
+            } else {
+                console.error('Tabulator library failed to load');
+                showErrorMessage('Table library failed to load. Please refresh the page.');
+            }
+        }, 1000);
+    }
+    
+    // Add event listeners for buttons
+    setupEventListeners();
+    
+    // Add keyboard shortcuts for table navigation
+    setupKeyboardShortcuts();
+});
+
+// Setup event listeners
+function setupEventListeners() {
+    // Export button
+    const exportBtn = document.getElementById('exportBtn');
+    if (exportBtn) {
+        exportBtn.addEventListener('click', exportToExcel);
+    }
+    
+    // Save button
+    const saveBtn = document.getElementById('saveBtn');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', saveGrades);
+    }
+    
+    // Quick action buttons
+    const fillZerosBtn = document.getElementById('fillZerosBtn');
+    if (fillZerosBtn) {
+        fillZerosBtn.addEventListener('click', fillAllWithZero);
+    }
+    
+    const fillRandomBtn = document.getElementById('fillRandomBtn');
+    if (fillRandomBtn) {
+        fillRandomBtn.addEventListener('click', fillAllWithRandom);
+    }
+    
+    const clearAllBtn = document.getElementById('clearAllBtn');
+    if (clearAllBtn) {
+        clearAllBtn.addEventListener('click', clearAll);
+    }
+    
+    // Fullscreen buttons
+    const maximizeBtn = document.getElementById('maximizeBtn');
+    if (maximizeBtn) {
+        maximizeBtn.addEventListener('click', maximizeTable);
+    }
+    
+    const minimizeBtn = document.getElementById('minimizeBtn');
+    if (minimizeBtn) {
+        minimizeBtn.addEventListener('click', minimizeTable);
+    }
+    
+    const fullscreenExportBtn = document.getElementById('fullscreenExportBtn');
+    if (fullscreenExportBtn) {
+        fullscreenExportBtn.addEventListener('click', exportToExcel);
+    }
+    
+    const fullscreenSaveBtn = document.getElementById('fullscreenSaveBtn');
+    if (fullscreenSaveBtn) {
+        fullscreenSaveBtn.addEventListener('click', saveGrades);
+    }
+    
+    // Auto rank button
+    const autoRankBtn = document.getElementById('autoRankBtn');
+    if (autoRankBtn) {
+        autoRankBtn.addEventListener('click', applyAutoRanking);
+    }
+    
+    // Shortcuts button
+    const shortcutsBtn = document.getElementById('shortcutsBtn');
+    if (shortcutsBtn) {
+        shortcutsBtn.addEventListener('click', function() {
+            const helpDiv = document.getElementById('keyboardShortcutsHelp');
+            if (helpDiv) {
+                helpDiv.style.display = helpDiv.style.display === 'none' ? 'block' : 'none';
+            }
+        });
+    }
+}
+
+// Setup keyboard shortcuts for table navigation
+function setupKeyboardShortcuts() {
+    document.addEventListener('keydown', function(e) {
+        // Only handle shortcuts when table is focused or when not in input fields
+        if (e.target.tagName === 'INPUT' && e.target.type !== 'text') return;
+        
+        const activeTable = fullscreenTable || table;
+        if (!activeTable) return;
+        
+        const selectedCells = activeTable.getSelectedCells();
+        if (selectedCells.length === 0) return;
+        
+        const cell = selectedCells[0];
+        const row = cell.getRow();
+        const col = cell.getColumn();
+        const data = activeTable.getData();
+        const currentRowIndex = row.getPosition();
+        
+        // Navigation shortcuts
+        switch(e.key) {
+            case 'ArrowDown':
+                if (e.ctrlKey) {
+                    e.preventDefault();
+                    // Move to next student in same subject
+                    if (currentRowIndex < data.length - 1) {
+                        const nextRow = activeTable.getRowFromPosition(currentRowIndex + 1);
+                        const nextCell = nextRow.getCell(col.getField());
+                        nextCell.select();
+                    }
+                }
+                break;
+                
+            case 'ArrowUp':
+                if (e.ctrlKey) {
+                    e.preventDefault();
+                    // Move to previous student in same subject
+                    if (currentRowIndex > 0) {
+                        const prevRow = activeTable.getRowFromPosition(currentRowIndex - 1);
+                        const prevCell = prevRow.getCell(col.getField());
+                        prevCell.select();
+                    }
+                }
+                break;
+                
+            case 'ArrowRight':
+                if (e.ctrlKey) {
+                    e.preventDefault();
+                    // Move to next subject for same student
+                    const currentField = col.getField();
+                    const subjectMatch = currentField.match(/^subject_(\d+)$/);
+                    if (subjectMatch) {
+                        const currentSubjectIndex = subjects.findIndex(s => s.id == subjectMatch[1]);
+                        if (currentSubjectIndex < subjects.length - 1) {
+                            const nextSubject = subjects[currentSubjectIndex + 1];
+                            activeTable.selectCell(currentRowIndex, `subject_${nextSubject.id}`);
+                        }
+                    }
+                }
+                break;
+                
+            case 'ArrowLeft':
+                if (e.ctrlKey) {
+                    e.preventDefault();
+                    // Move to previous subject for same student
+                    const currentField = col.getField();
+                    const subjectMatch = currentField.match(/^subject_(\d+)$/);
+                    if (subjectMatch) {
+                        const currentSubjectIndex = subjects.findIndex(s => s.id == subjectMatch[1]);
+                        if (currentSubjectIndex > 0) {
+                            const prevSubject = subjects[currentSubjectIndex - 1];
+                            activeTable.selectCell(currentRowIndex, `subject_${prevSubject.id}`);
+                        }
+                    }
+                }
+                break;
+                
+            case 'Enter':
+                if (e.ctrlKey) {
+                    e.preventDefault();
+                    // Move to next student in same subject (same as Ctrl+Down)
+                    if (currentRowIndex < data.length - 1) {
+                        activeTable.selectCell(currentRowIndex + 1, col.getField());
+                    }
+                }
+                break;
+                
+            case 'Tab':
+                if (e.ctrlKey) {
+                    e.preventDefault();
+                    // Move to next subject for same student (same as Ctrl+Right)
+                    const currentField = col.getField();
+                    const subjectMatch = currentField.match(/^subject_(\d+)$/);
+                    if (subjectMatch) {
+                        const currentSubjectIndex = subjects.findIndex(s => s.id == subjectMatch[1]);
+                        if (currentSubjectIndex < subjects.length - 1) {
+                            const nextSubject = subjects[currentSubjectIndex + 1];
+                            activeTable.selectCell(currentRowIndex, `subject_${nextSubject.id}`);
+                        }
+                    }
+                }
+                break;
+        }
+    });
+    
+    // Add visual indicator for keyboard shortcuts
+    addKeyboardShortcutsHelp();
+}
+
+// Add keyboard shortcuts help
+function addKeyboardShortcutsHelp() {
+    const helpDiv = document.createElement('div');
+    helpDiv.id = 'keyboardShortcutsHelp';
+    helpDiv.className = 'keyboard-shortcuts-help';
+    helpDiv.innerHTML = `
+        <div class="shortcuts-header">
+            <i class="fas fa-keyboard me-2"></i>
+            <strong>Keyboard Shortcuts</strong>
+            <button type="button" class="btn btn-sm btn-outline-secondary ms-2" onclick="toggleShortcutsHelp()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="shortcuts-content">
+            <div class="shortcut-item">
+                <kbd>Ctrl</kbd> + <kbd>↓</kbd> - Move to next student (same subject)
+            </div>
+            <div class="shortcut-item">
+                <kbd>Ctrl</kbd> + <kbd>↑</kbd> - Move to previous student (same subject)
+            </div>
+            <div class="shortcut-item">
+                <kbd>Ctrl</kbd> + <kbd>→</kbd> - Move to next subject (same student)
+            </div>
+            <div class="shortcut-item">
+                <kbd>Ctrl</kbd> + <kbd>←</kbd> - Move to previous subject (same student)
+            </div>
+            <div class="shortcut-item">
+                <kbd>Ctrl</kbd> + <kbd>Enter</kbd> - Move to next student (same subject)
+            </div>
+            <div class="shortcut-item">
+                <kbd>Ctrl</kbd> + <kbd>Tab</kbd> - Move to next subject (same student)
+            </div>
+        </div>
+    `;
+    
+    document.body.appendChild(helpDiv);
+}
+
+// Toggle keyboard shortcuts help
+function toggleShortcutsHelp() {
+    const helpDiv = document.getElementById('keyboardShortcutsHelp');
+    if (helpDiv) {
+        helpDiv.style.display = helpDiv.style.display === 'none' ? 'block' : 'none';
+    }
+}
+
+function initializeTable() {
+    // Prepare table data with existing grades
+    tableData = students.map((student, index) => {
+        const row = {
+            id: student.id,
+            student_name: student.name,
+            admission_no: student.admission_no,
+            rank: index + 1
+        };
+        
+        // Add subject columns with existing grades
+        subjects.forEach(subject => {
+            const gradeKey = `${student.id}-${subject.id}`;
+            row[`subject_${subject.id}`] = gradeMap[gradeKey] || 0;
+        });
+        
+        // Add calculated columns
+        row.total = 0;
+        row.average = 0;
+        
+        return row;
+    });
+    
+    // Initialize Tabulator
+    table = new Tabulator("#gradeTable", {
+        data: tableData,
+        layout: "fitColumns",
+        height: 500,
+        pagination: false,
+        movableColumns: true,
+        resizableColumns: true,
+        selectable: true,
+        clipboard: true,
+        clipboardCopyConfig: {
+            columnHeaders: true,
+            columnGroups: true,
+            rowGroups: true,
+            columnCalcs: true,
+            dataTree: true,
+            formatCells: true
+        },
+        columns: [
+            {
+                title: "Student Name",
+                field: "student_name",
+                width: 200,
+                frozen: true,
+                editor: false,
+                cssClass: "student-info"
+            },
+            {
+                title: "Admission No",
+                field: "admission_no",
+                width: 120,
+                frozen: true,
+                editor: false,
+                cssClass: "student-info"
+            },
+            ...subjects.map(subject => ({
+                title: subject.code || subject.name.substring(0, 3).toUpperCase(),
+                field: `subject_${subject.id}`,
+                width: 120,
+                editor: "number",
+                editorParams: {
+                    min: 0,
+                    max: 100,
+                    step: 0.1
+                },
+                validator: "numeric",
+                formatter: "number",
+                formatterParams: {
+                    precision: 1
+                },
+                cellEdited: function(cell) {
+                    calculateRowTotals(cell.getRow());
+                    updateStatistics();
+                    
+                    // Auto-save on cell edit
+                    autoSaveGrade(cell);
+                },
+                headerTooltip: subject.name
+            })),
+            {
+                title: "Total",
+                field: "total",
+                width: 120,
+                editor: false,
+                formatter: "number",
+                formatterParams: {
+                    precision: 1
+                },
+                cssClass: "total-column"
+            },
+            {
+                title: "Average",
+                field: "average",
+                width: 120,
+                editor: false,
+                formatter: "number",
+                formatterParams: {
+                    precision: 2
+                },
+                cssClass: "average-column"
+            },
+            {
+                title: "Rank",
+                field: "rank",
+                width: 60,
+                editor: false,
+                cssClass: "rank-column"
+            }
+        ],
+        rowFormatter: function(row) {
+            const data = row.getData();
+            
+            // Color code based on average
+            if (data.average >= 80) {
+                row.getElement().style.backgroundColor = "#d4edda";
+            } else if (data.average >= 60) {
+                row.getElement().style.backgroundColor = "#d1ecf1";
+            } else if (data.average >= 40) {
+                row.getElement().style.backgroundColor = "#fff3cd";
+            } else if (data.average > 0) {
+                row.getElement().style.backgroundColor = "#f8d7da";
+            }
+        }
+    });
+    
+    // Initial calculations
+    calculateAllTotals();
+    updateStatistics();
+    
+    // Debug grade map
+    console.log('Grade map loaded:', gradeMap);
+    console.log('Table data with grades:', tableData);
+}
+
+// Calculate totals for a specific row
+function calculateRowTotals(row) {
+    const data = row.getData();
+    let total = 0;
+    let count = 0;
+    
+    subjects.forEach(subject => {
+        const value = parseFloat(data[`subject_${subject.id}`]) || 0;
+        if (value > 0) {
+            total += value;
+            count++;
+        }
+    });
+    
+    const average = count > 0 ? total / count : 0;
+    
+    row.update({
+        total: total,
+        average: average
+    });
+    
+    // Update rank
+    updateRankings();
+}
+
+// Calculate all totals
+function calculateAllTotals() {
+    table.getRows().forEach(row => {
+        calculateRowTotals(row);
+    });
+}
+
+// Update rankings
+function updateRankings() {
+    const rows = table.getRows();
+    const sortedRows = rows.sort((a, b) => b.getData().total - a.getData().total);
+    
+    sortedRows.forEach((row, index) => {
+        row.update({ rank: index + 1 });
+    });
+}
+
+// Update statistics
+function updateStatistics() {
+    const rows = table.getRows();
+    const data = rows.map(row => row.getData());
+    
+    // Calculate completion rate
+    let completedGrades = 0;
+    let totalPossibleGrades = students.length * subjects.length;
+    
+    data.forEach(student => {
+        subjects.forEach(subject => {
+            const value = parseFloat(student[`subject_${subject.id}`]) || 0;
+            if (value > 0) {
+                completedGrades++;
+            }
+        });
+    });
+    
+    const completionRate = totalPossibleGrades > 0 ? Math.round((completedGrades / totalPossibleGrades) * 100) : 0;
+    
+    // Calculate average score
+    let totalScore = 0;
+    let scoreCount = 0;
+    
+    data.forEach(student => {
+        subjects.forEach(subject => {
+            const value = parseFloat(student[`subject_${subject.id}`]) || 0;
+            if (value > 0) {
+                totalScore += value;
+                scoreCount++;
+            }
+        });
+    });
+    
+    const averageScore = scoreCount > 0 ? totalScore / scoreCount : 0;
+    
+    // Update UI
+    document.getElementById('completionRate').textContent = completionRate + '%';
+    document.getElementById('completionRateCard').textContent = completionRate + '%';
+    document.getElementById('averageScore').textContent = averageScore.toFixed(2);
+    document.getElementById('tableStatus').textContent = completionRate === 100 ? 'Complete' : 'In Progress';
+    document.getElementById('tableStatus').className = completionRate === 100 ? 'badge bg-success ms-2' : 'badge bg-warning ms-2';
+    
+    // Log for debugging
+    console.log('Statistics updated:', {
+        completedGrades,
+        totalPossibleGrades,
+        completionRate,
+        averageScore
+    });
+}
+
+// Quick action functions
+function fillAllWithZero() {
+    table.getRows().forEach(row => {
+        const data = row.getData();
+        const updates = {};
+        
+        subjects.forEach(subject => {
+            updates[`subject_${subject.id}`] = 0;
+        });
+        
+        row.update(updates);
+    });
+    
+    calculateAllTotals();
+    updateStatistics();
+}
+
+function fillAllWithRandom() {
+    table.getRows().forEach(row => {
+        const data = row.getData();
+        const updates = {};
+        
+        subjects.forEach(subject => {
+            updates[`subject_${subject.id}`] = Math.floor(Math.random() * 41) + 60; // 60-100
+        });
+        
+        row.update(updates);
+    });
+    
+    calculateAllTotals();
+    updateStatistics();
+}
+
+function clearAll() {
+    table.getRows().forEach(row => {
+        const data = row.getData();
+        const updates = {};
+        
+        subjects.forEach(subject => {
+            updates[`subject_${subject.id}`] = '';
+        });
+        
+        row.update(updates);
+    });
+    
+    calculateAllTotals();
+    updateStatistics();
+}
+
+// Auto-save individual grade
+function autoSaveGrade(cell) {
+    try {
+        const row = cell.getRow();
+        const data = row.getData();
+        const field = cell.getField();
+        
+        // Check if this is a subject field
+        const subjectMatch = field.match(/^subject_(\d+)$/);
+        if (!subjectMatch) return;
+        
+        const subjectId = parseInt(subjectMatch[1]);
+        const studentId = data.id;
+        const score = parseFloat(cell.getValue()) || 0;
+        
+        // Prepare grade data
+        const gradeData = {
+            student_id: studentId,
+            subject_id: subjectId,
+            score: score
+        };
+        
+        // Send AJAX request to save individual grade
+        fetch(`/grades/save-single?term=${term}&year=${year}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(gradeData)
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                // Show subtle success indicator
+                showAutoSaveIndicator('Grade saved');
+            } else {
+                console.error('Auto-save failed:', result.message);
+            }
+        })
+        .catch(error => {
+            console.error('Auto-save error:', error);
+        });
+        
+    } catch (error) {
+        console.error('Auto-save error:', error);
+    }
+}
+
+// Save all grades (manual save)
+function saveGrades() {
+    try {
+        showLoading();
+        
+        const form = document.getElementById('gradeForm');
+        const gradeInputs = document.getElementById('gradeInputs');
+        gradeInputs.innerHTML = '';
+        
+        const data = table.getData();
+        let hasAnyGrades = false;
+        
+        data.forEach(student => {
+            subjects.forEach(subject => {
+                const value = parseFloat(student[`subject_${subject.id}`]) || 0;
+                // Save all values, including 0 and empty
+                hasAnyGrades = true;
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'grades[]';
+                input.value = JSON.stringify({
+                    student_id: student.id,
+                    subject_id: subject.id,
+                    score: value
+                });
+                gradeInputs.appendChild(input);
+            });
+        });
+        
+        if (!hasAnyGrades) {
+            hideLoading();
+            showErrorMessage('No data to save.');
+            return;
+        }
+        
+        // Submit the form
+        form.submit();
+        
+    } catch (error) {
+        hideLoading();
+        console.error('Save grades error:', error);
+        showErrorMessage('Failed to save grades. Please try again.');
+    }
+}
+
+// Export to Excel
+function exportToExcel() {
+    try {
+        // Check if XLSX library is loaded
+        if (typeof XLSX === 'undefined') {
+            showErrorMessage('Excel library not loaded. Please refresh the page and try again.');
+            return;
+        }
+        
+        showLoading();
+        
+        const data = table.getData();
+        
+        // Create workbook
+        const wb = XLSX.utils.book_new();
+        
+        // Prepare data for export and sort by rank
+        const exportData = data
+            .map(student => {
+                const row = {
+                    'Student Name': student.student_name,
+                    'Admission No': student.admission_no
+                };
+                
+                subjects.forEach(subject => {
+                    const subjectCode = subject.code || subject.name.substring(0, 3).toUpperCase();
+                    row[subjectCode] = student[`subject_${subject.id}`] || '';
+                });
+                
+                row['Total'] = student.total;
+                row['Average'] = student.average;
+                row['Rank'] = student.rank;
+                
+                return row;
+            })
+            .sort((a, b) => (a.Rank || 0) - (b.Rank || 0)); // Sort by rank (1, 2, 3, etc.)
+        
+        // Create worksheet
+        const ws = XLSX.utils.json_to_sheet(exportData);
+        
+        // Set column widths
+        const colWidths = [
+            { wch: 20 }, // Student Name
+            { wch: 15 }, // Admission No
+            ...subjects.map(() => ({ wch: 10 })), // Subject columns
+            { wch: 10 }, // Total
+            { wch: 10 }, // Average
+            { wch: 8 }   // Rank
+        ];
+        ws['!cols'] = colWidths;
+        
+        // Add worksheet to workbook
+        XLSX.utils.book_append_sheet(wb, ws, `Grade_${classLevel}_Term_${term}`);
+        
+        // Add comprehensive summary sheet
+        const summaryData = [
+            ['GRADE ENTRY REPORT'],
+            [''],
+            ['Class Level:', classLevel],
+            ['Term:', term],
+            ['Academic Year:', year],
+            ['Total Students:', students.length],
+            ['Total Subjects:', subjects.length],
+            ['Export Date:', new Date().toLocaleDateString()],
+            ['Export Time:', new Date().toLocaleTimeString()],
+            [''],
+            ['STATISTICS'],
+            ['Completion Rate:', `${Math.round((exportData.filter(row => Object.values(row).some(val => val > 0)).length / students.length) * 100)}%`],
+            ['Average Score:', `${(exportData.reduce((sum, row) => sum + (row.Average || 0), 0) / students.length).toFixed(2)}`],
+            ['Highest Score:', `${Math.max(...exportData.map(row => row.Total || 0))}`],
+            ['Lowest Score:', `${Math.min(...exportData.map(row => row.Total || 0))}`],
+            [''],
+            ['SUBJECT LIST'],
+            ...subjects.map(subject => ['', subject.name]),
+            [''],
+            ['TOP 5 STUDENTS'],
+            ['Rank', 'Student Name', 'Admission No', 'Total Score', 'Average'],
+            ...exportData.slice(0, 5).map(row => [
+                row.Rank,
+                row['Student Name'],
+                row['Admission No'],
+                row.Total,
+                row.Average
+            ])
+        ];
+        
+        const summaryWs = XLSX.utils.aoa_to_sheet(summaryData);
+        
+        // Set column widths for summary
+        summaryWs['!cols'] = [
+            { wch: 20 },
+            { wch: 15 },
+            { wch: 12 },
+            { wch: 10 },
+            { wch: 10 }
+        ];
+        
+        XLSX.utils.book_append_sheet(wb, summaryWs, 'Report Summary');
+        
+        // Add subject analysis sheet
+        const subjectAnalysis = [
+            ['SUBJECT ANALYSIS'],
+            [''],
+            ['Subject', 'Average Score', 'Highest Score', 'Lowest Score', 'Students Count'],
+            ...subjects.map(subject => {
+                const subjectScores = exportData.map(row => row[subject.name]).filter(score => score > 0);
+                return [
+                    subject.name,
+                    subjectScores.length > 0 ? (subjectScores.reduce((sum, score) => sum + score, 0) / subjectScores.length).toFixed(2) : 'N/A',
+                    subjectScores.length > 0 ? Math.max(...subjectScores) : 'N/A',
+                    subjectScores.length > 0 ? Math.min(...subjectScores) : 'N/A',
+                    subjectScores.length
+                ];
+            })
+        ];
+        
+        const analysisWs = XLSX.utils.aoa_to_sheet(subjectAnalysis);
+        analysisWs['!cols'] = [
+            { wch: 20 },
+            { wch: 15 },
+            { wch: 15 },
+            { wch: 15 },
+            { wch: 15 }
+        ];
+        
+        XLSX.utils.book_append_sheet(wb, analysisWs, 'Subject Analysis');
+        
+        // Generate filename
+        const filename = `Grade_${classLevel}_Term_${term}_${year}_${new Date().toISOString().split('T')[0]}.xlsx`;
+        
+        // Download file
+        XLSX.writeFile(wb, filename);
+        
+        hideLoading();
+        
+        // Show success message
+        showSuccessMessage('Excel file exported successfully!');
+        
+    } catch (error) {
+        hideLoading();
+        console.error('Export error:', error);
+        showErrorMessage('Failed to export Excel file. Please try again.');
+    }
+}
+
+// Show loading overlay
+function showLoading() {
+    document.getElementById('loadingOverlay').style.display = 'flex';
+}
+
+// Hide loading overlay
+function hideLoading() {
+    document.getElementById('loadingOverlay').style.display = 'none';
+}
+
+// Show error message
+function showErrorMessage(message) {
+    const container = document.getElementById('gradeTable');
+    if (container) {
+        container.innerHTML = `
+            <div class="alert alert-danger" role="alert">
+                <h4 class="alert-heading">Error Loading Table</h4>
+                <p>${message}</p>
+                <hr>
+                <p class="mb-0">
+                    <button class="btn btn-primary" onclick="location.reload()">
+                        <i class="fas fa-refresh me-2"></i>Refresh Page
+                    </button>
+                </p>
+            </div>
+        `;
+    }
+}
+
+// Show success message
+function showSuccessMessage(message) {
+    // Create a temporary success alert
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success alert-dismissible fade show position-fixed';
+    alertDiv.style.cssText = 'top: 20px; right: 20px; z-index: 9999; min-width: 300px;';
+    alertDiv.innerHTML = `
+        <i class="fas fa-check-circle me-2"></i>
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    `;
+    
+    document.body.appendChild(alertDiv);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (alertDiv.parentNode) {
+            alertDiv.remove();
+        }
+    }, 5000);
+}
+
+// Show auto-save indicator
+function showAutoSaveIndicator(message) {
+    // Remove any existing auto-save indicator
+    const existing = document.getElementById('autoSaveIndicator');
+    if (existing) {
+        existing.remove();
+    }
+    
+    // Create a subtle auto-save indicator
+    const indicator = document.createElement('div');
+    indicator.id = 'autoSaveIndicator';
+    indicator.className = 'position-fixed';
+    indicator.style.cssText = 'top: 20px; left: 20px; z-index: 9999; background: #28a745; color: white; padding: 8px 16px; border-radius: 4px; font-size: 14px; box-shadow: 0 2px 4px rgba(0,0,0,0.2);';
+    indicator.innerHTML = `<i class="fas fa-save me-2"></i>${message}`;
+    
+    document.body.appendChild(indicator);
+    
+    // Auto-remove after 2 seconds
+    setTimeout(() => {
+        if (indicator.parentNode) {
+            indicator.remove();
+        }
+    }, 2000);
+}
+
+// Maximize table to fullscreen
+function maximizeTable() {
+    const overlay = document.getElementById('fullscreenOverlay');
+    if (overlay) {
+        overlay.style.display = 'block';
+        document.body.style.overflow = 'hidden';
+        
+        // Initialize fullscreen table if not already done
+        if (!fullscreenTable) {
+            initializeFullscreenTable();
+        } else {
+            // Update existing table data
+            fullscreenTable.setData(tableData);
+            calculateAllTotals();
+            updateStatistics();
+        }
+    }
+}
+
+// Minimize table from fullscreen
+function minimizeTable() {
+    const overlay = document.getElementById('fullscreenOverlay');
+    if (overlay) {
+        overlay.style.display = 'none';
+        document.body.style.overflow = 'auto';
+        
+        // Sync data back to main table
+        if (fullscreenTable && table) {
+            const fullscreenData = fullscreenTable.getData();
+            table.setData(fullscreenData);
+            calculateAllTotals();
+            updateStatistics();
+        }
+    }
+}
+
+// Initialize fullscreen table
+function initializeFullscreenTable() {
+    const container = document.getElementById('fullscreenGradeTable');
+    if (!container) return;
+    
+    fullscreenTable = new Tabulator(container, {
+        data: tableData,
+        layout: "fitColumns",
+        height: "calc(100vh - 120px)",
+        pagination: false,
+        movableColumns: true,
+        resizableColumns: true,
+        selectable: true,
+        clipboard: true,
+        clipboardCopyConfig: {
+            columnHeaders: true,
+            columnGroups: true,
+            rowGroups: true,
+            columnCalcs: true,
+            dataTree: true,
+            formatCells: true
+        },
+        columns: [
+            {
+                title: "Student Name",
+                field: "student_name",
+                width: 200,
+                frozen: true,
+                editor: false,
+                cssClass: "student-info"
+            },
+            {
+                title: "Admission No",
+                field: "admission_no",
+                width: 120,
+                frozen: true,
+                editor: false,
+                cssClass: "student-info"
+            },
+            ...subjects.map(subject => ({
+                title: subject.code || subject.name.substring(0, 3).toUpperCase(),
+                field: `subject_${subject.id}`,
+                width: 120,
+                editor: "number",
+                editorParams: {
+                    min: 0,
+                    max: 100,
+                    step: 0.1
+                },
+                validator: "numeric",
+                formatter: "number",
+                formatterParams: {
+                    precision: 1
+                },
+                cellEdited: function(cell) {
+                    calculateRowTotals(cell.getRow());
+                    updateFullscreenStatistics();
+                    autoSaveGrade(cell);
+                },
+                headerTooltip: subject.name
+            })),
+            {
+                title: "Total",
+                field: "total",
+                width: 120,
+                editor: false,
+                formatter: "number",
+                formatterParams: {
+                    precision: 1
+                },
+                cssClass: "total-column"
+            },
+            {
+                title: "Average",
+                field: "average",
+                width: 120,
+                editor: false,
+                formatter: "number",
+                formatterParams: {
+                    precision: 2
+                },
+                cssClass: "average-column"
+            },
+            {
+                title: "Rank",
+                field: "rank",
+                width: 60,
+                editor: false,
+                cssClass: "rank-column"
+            }
+        ],
+        rowFormatter: function(row) {
+            const data = row.getData();
+            
+            // Color code based on average
+            if (data.average >= 80) {
+                row.getElement().style.backgroundColor = "#d4edda";
+            } else if (data.average >= 60) {
+                row.getElement().style.backgroundColor = "#d1ecf1";
+            } else if (data.average >= 40) {
+                row.getElement().style.backgroundColor = "#fff3cd";
+            } else if (data.average > 0) {
+                row.getElement().style.backgroundColor = "#f8d7da";
+            }
+        }
+    });
+    
+    // Initial calculations
+    calculateAllTotals();
+    updateFullscreenStatistics();
+}
+
+// Update fullscreen statistics
+function updateFullscreenStatistics() {
+    if (!fullscreenTable) return;
+    
+    const rows = fullscreenTable.getRows();
+    const data = rows.map(row => row.getData());
+    
+    // Calculate completion rate
+    let completedGrades = 0;
+    let totalPossibleGrades = students.length * subjects.length;
+    
+    data.forEach(student => {
+        subjects.forEach(subject => {
+            const value = parseFloat(student[`subject_${subject.id}`]) || 0;
+            if (value > 0) {
+                completedGrades++;
+            }
+        });
+    });
+    
+    const completionRate = totalPossibleGrades > 0 ? Math.round((completedGrades / totalPossibleGrades) * 100) : 0;
+    
+    // Calculate average score
+    let totalScore = 0;
+    let scoreCount = 0;
+    
+    data.forEach(student => {
+        subjects.forEach(subject => {
+            const value = parseFloat(student[`subject_${subject.id}`]) || 0;
+            if (value > 0) {
+                totalScore += value;
+                scoreCount++;
+            }
+        });
+    });
+    
+    const averageScore = scoreCount > 0 ? totalScore / scoreCount : 0;
+    
+    // Update fullscreen UI
+    const fullscreenCompletionRate = document.getElementById('fullscreenCompletionRate');
+    const fullscreenTableStatus = document.getElementById('fullscreenTableStatus');
+    
+    if (fullscreenCompletionRate) {
+        fullscreenCompletionRate.textContent = completionRate + '%';
+    }
+    
+    if (fullscreenTableStatus) {
+        fullscreenTableStatus.textContent = completionRate === 100 ? 'Complete' : 'In Progress';
+        fullscreenTableStatus.className = completionRate === 100 ? 'badge bg-success ms-2' : 'badge bg-warning ms-2';
+    }
+}
+
+// Apply auto-ranking
+function applyAutoRanking() {
+    try {
+        showLoading();
+        
+        // Get current data
+        const data = table.getData();
+        
+        // Sort by total score (descending)
+        const sortedData = data.sort((a, b) => (b.total || 0) - (a.total || 0));
+        
+        // Update ranks
+        sortedData.forEach((student, index) => {
+            student.rank = index + 1;
+        });
+        
+        // Update table with new rankings
+        table.setData(sortedData);
+        
+        // Update statistics
+        updateStatistics();
+        
+        hideLoading();
+        
+        // Show success message
+        showSuccessMessage('Auto-ranking applied successfully!');
+        
+    } catch (error) {
+        hideLoading();
+        console.error('Auto-ranking error:', error);
+        showErrorMessage('Failed to apply auto-ranking. Please try again.');
+    }
+}
+</script>
+
+<style>
+/* Tabulator custom styles */
+.tabulator-container {
+    width: 100%;
+    height: 700px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.tabulator {
+    font-family: inherit;
+}
+
+.tabulator .tabulator-header {
+    background-color: #343a40;
+    color: white;
+    font-weight: bold;
+}
+
+.tabulator .tabulator-header .tabulator-col {
+    background-color: #343a40;
+    color: white;
+    border-right: 1px solid #495057;
+}
+
+.tabulator .tabulator-header .tabulator-col:hover {
+    background-color: #495057;
+}
+
+.tabulator .tabulator-tableholder {
+    background-color: white;
+}
+
+.tabulator .tabulator-row {
+    border-bottom: 1px solid #dee2e6;
+}
+
+.tabulator .tabulator-row:hover {
+    background-color: #f8f9fa;
+}
+
+.tabulator .tabulator-cell {
+    border-right: 1px solid #dee2e6;
+    padding: 8px;
+}
+
+.tabulator .tabulator-cell.student-info {
+    background-color: #f8f9fa;
+    font-weight: 600;
+}
+
+.tabulator .tabulator-cell.total-column {
+    background-color: #e3f2fd;
+    font-weight: bold;
+}
+
+.tabulator .tabulator-cell.average-column {
+    background-color: #e8f5e8;
+    font-weight: bold;
+}
+
+.tabulator .tabulator-cell.rank-column {
+    background-color: #fff3e0;
+    font-weight: bold;
+    text-align: center;
+}
+
+.tabulator .tabulator-cell input {
+    border: none;
+    background: transparent;
+    width: 100%;
+    height: 100%;
+    padding: 4px;
+    font-size: 14px;
+}
+
+.tabulator .tabulator-cell input:focus {
+    outline: 2px solid #007bff;
+    outline-offset: -2px;
+    background: white;
+}
+
+/* Statistics cards */
+.stats-card {
+    border: none;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    transition: transform 0.2s;
+}
+
+.stats-card:hover {
+    transform: translateY(-2px);
+}
+
+.stats-number {
+    font-size: 2rem;
+    font-weight: bold;
+    color: #007bff;
+    margin-bottom: 0.5rem;
+}
+
+/* Loading overlay */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.loading-content {
+    background: white;
+    padding: 2rem;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Grade controls */
+.grade-controls {
+    background-color: #f8f9fa;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+/* Button styles */
+.btn-export {
+    background-color: #28a745;
+    border-color: #28a745;
+    color: white;
+}
+
+.btn-export:hover {
+    background-color: #218838;
+    border-color: #1e7e34;
+    color: white;
+}
+
+.btn-save {
+    background-color: #007bff;
+    border-color: #007bff;
+    color: white;
+}
+
+.btn-save:hover {
+    background-color: #0056b3;
+    border-color: #004085;
+    color: white;
+}
+
+/* Fullscreen overlay styles */
+.fullscreen-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #f8f9fa;
+    z-index: 9999;
+    display: none;
+}
+
+.fullscreen-header {
+    background-color: #343a40;
+    color: white;
+    padding: 1rem 1.5rem;
+    border-bottom: 1px solid #495057;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.fullscreen-table-container {
+    height: calc(100vh - 80px);
+    padding: 1rem;
+}
+
+.fullscreen-tabulator-container {
+    width: 100%;
+    height: 100%;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+}
+
+/* Subject code styling */
+.tabulator .tabulator-header .tabulator-col[data-field^="subject_"] {
+    font-weight: bold;
+    font-size: 13px;
+    text-align: center;
+    background-color: #e9ecef;
+    border-right: 1px solid #dee2e6;
+    min-width: 120px;
+}
+
+.tabulator .tabulator-header .tabulator-col[data-field^="subject_"]:hover {
+    background-color: #dee2e6;
+}
+
+/* Tooltip styling */
+.tabulator .tabulator-header .tabulator-col[title] {
+    position: relative;
+    cursor: help;
+}
+
+.tabulator .tabulator-header .tabulator-col[title]:hover::after {
+    content: attr(title);
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #333;
+    color: white;
+    padding: 8px 12px;
+    border-radius: 4px;
+    font-size: 12px;
+    white-space: nowrap;
+    z-index: 1000;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    pointer-events: none;
+}
+
+.tabulator .tabulator-header .tabulator-col[title]:hover::before {
+    content: '';
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #333;
+    z-index: 1000;
+    pointer-events: none;
+}
+
+/* Keyboard shortcuts help panel */
+.keyboard-shortcuts-help {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    z-index: 1000;
+    max-width: 300px;
+    display: none;
+}
+
+.shortcuts-header {
+    background: #f8f9fa;
+    padding: 12px 16px;
+    border-bottom: 1px solid #dee2e6;
+    border-radius: 8px 8px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.shortcuts-content {
+    padding: 16px;
+}
+
+.shortcut-item {
+    margin-bottom: 8px;
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+}
+
+.shortcut-item:last-child {
+    margin-bottom: 0;
+}
+
+.shortcut-item kbd {
+    background: #e9ecef;
+    border: 1px solid #adb5bd;
+    border-radius: 3px;
+    box-shadow: 0 1px 0 rgba(0,0,0,0.2);
+    color: #495057;
+    display: inline-block;
+    font-size: 11px;
+    font-weight: bold;
+    line-height: 1;
+    padding: 2px 4px;
+    white-space: nowrap;
+    margin: 0 2px;
+}
+
+/* Responsive fullscreen header */
+@media (max-width: 768px) {
+    .fullscreen-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5rem;
+    }
+    
+    .fullscreen-header .d-flex {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .fullscreen-table-container {
+        height: calc(100vh - 120px);
+        padding: 0.5rem;
+    }
+    
+    .keyboard-shortcuts-help {
+        top: 10px;
+        right: 10px;
+        left: 10px;
+        max-width: none;
+    }
+}
+</style>

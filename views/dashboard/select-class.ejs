@@ -1,0 +1,81 @@
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-funnel me-2"></i>
+                    Select Class for Grade Entry
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/dashboard/select-class">
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label for="class_level" class="form-label">Class Level</label>
+                            <select class="form-select" id="class_level" name="class_level" required>
+                                <option value="">Select Class</option>
+                                <% classLevels.forEach(function(classLevel) { %>
+                                    <option value="<%= classLevel %>">Grade <%= classLevel %></option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="term" class="form-label">Term</label>
+                            <select class="form-select" id="term" name="term" required>
+                                <option value="">Select Term</option>
+                                <% terms.forEach(function(term) { %>
+                                    <option value="<%= term %>" <%= term === '1' ? 'selected' : '' %>>
+                                        Term <%= term %>
+                                    </option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        
+                        <div class="col-md-4 mb-3">
+                            <label for="year" class="form-label">Academic Year</label>
+                            <select class="form-select" id="year" name="year" required>
+                                <option value="">Select Year</option>
+                                <% for(let year = currentYear - 2; year <= currentYear + 1; year++) { %>
+                                    <option value="<%= year %>" <%= year === currentYear ? 'selected' : '' %>>
+                                        <%= year %>
+                                    </option>
+                                <% } %>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="/dashboard" class="btn btn-outline-secondary me-md-2">
+                            <i class="bi bi-arrow-left me-2"></i>
+                            Back to Dashboard
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-arrow-right me-2"></i>
+                            Continue to Grade Entry
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Grade Entry Instructions
+                </h6>
+                <ul class="list-unstyled mb-0">
+                    <li><i class="bi bi-check-circle text-success me-2"></i>Select the class level, term, and academic year</li>
+                    <li><i class="bi bi-check-circle text-success me-2"></i>You'll be taken to an Excel-like interface for grade entry</li>
+                    <li><i class="bi bi-check-circle text-success me-2"></i>Enter scores as percentages (0-100)</li>
+                    <li><i class="bi bi-check-circle text-success me-2"></i>Grades are automatically calculated and ranked</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

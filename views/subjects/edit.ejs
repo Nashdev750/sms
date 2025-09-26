@@ -1,0 +1,84 @@
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-pencil-square me-2"></i>
+                    Edit Subject
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/subjects/edit/<%= subject.id %>">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">Subject Name</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="<%= subject.name %>" required>
+                            <% if (errors && errors.find(e => e.param === 'name')) { %>
+                                <div class="text-danger small mt-1">
+                                    <%= errors.find(e => e.param === 'name').msg %>
+                                </div>
+                            <% } %>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="class_level" class="form-label">Class Level</label>
+                            <select class="form-select" id="class_level" name="class_level" required>
+                                <option value="">Select Class</option>
+                                <% classLevels.forEach(function(classLevel) { %>
+                                    <option value="<%= classLevel %>" 
+                                            <%= subject.class_level === classLevel ? 'selected' : '' %>>
+                                        Grade <%= classLevel %>
+                                    </option>
+                                <% }); %>
+                            </select>
+                            <% if (errors && errors.find(e => e.param === 'class_level')) { %>
+                                <div class="text-danger small mt-1">
+                                    <%= errors.find(e => e.param === 'class_level').msg %>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="/subjects" class="btn btn-outline-secondary me-md-2">
+                            <i class="bi bi-arrow-left me-2"></i>
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-2"></i>
+                            Update Subject
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Subject Information
+                </h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li><strong>Subject ID:</strong> <%= subject.id %></li>
+                            <li><strong>Date Added:</strong> <%= new Date(subject.created_at).toLocaleDateString() %></li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li><strong>Last Updated:</strong> <%= new Date(subject.updated_at).toLocaleDateString() %></li>
+                            <li><strong>Current Class:</strong> Grade <%= subject.class_level %></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

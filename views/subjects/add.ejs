@@ -1,0 +1,76 @@
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-book-plus me-2"></i>
+                    Add New Subject
+                </h5>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="/subjects/add">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="name" class="form-label">Subject Name</label>
+                            <input type="text" class="form-control" id="name" name="name" 
+                                   value="<%= formData ? formData.name : '' %>" required>
+                            <% if (errors && errors.find(e => e.param === 'name')) { %>
+                                <div class="text-danger small mt-1">
+                                    <%= errors.find(e => e.param === 'name').msg %>
+                                </div>
+                            <% } %>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <label for="class_level" class="form-label">Class Level</label>
+                            <select class="form-select" id="class_level" name="class_level" required>
+                                <option value="">Select Class</option>
+                                <% classLevels.forEach(function(classLevel) { %>
+                                    <option value="<%= classLevel %>" 
+                                            <%= formData && formData.class_level === classLevel ? 'selected' : '' %>>
+                                        Grade <%= classLevel %>
+                                    </option>
+                                <% }); %>
+                            </select>
+                            <% if (errors && errors.find(e => e.param === 'class_level')) { %>
+                                <div class="text-danger small mt-1">
+                                    <%= errors.find(e => e.param === 'class_level').msg %>
+                                </div>
+                            <% } %>
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="/subjects" class="btn btn-outline-secondary me-md-2">
+                            <i class="bi bi-arrow-left me-2"></i>
+                            Cancel
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-lg me-2"></i>
+                            Add Subject
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Subject Information Guidelines
+                </h6>
+                <ul class="list-unstyled mb-0">
+                    <li><i class="bi bi-check-circle text-success me-2"></i>Subject name must be unique for each class level</li>
+                    <li><i class="bi bi-check-circle text-success me-2"></i>Use the official subject name as per curriculum</li>
+                    <li><i class="bi bi-check-circle text-success me-2"></i>Select the appropriate class level (7, 8, or 9)</li>
+                    <li><i class="bi bi-check-circle text-success me-2"></i>Subjects can be added for multiple class levels</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,199 @@
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h2>Reports & Analytics</h2>
+        <p class="text-muted">Generate comprehensive reports and analytics</p>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Ranking Reports -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-trophy-fill me-2 text-warning"></i>
+                    Ranking Reports
+                </h5>
+                <p class="card-text">Generate student ranking reports with detailed performance analysis.</p>
+                
+                <form method="GET" action="/reports/ranking" class="mb-3">
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <select class="form-select" name="class_level" required>
+                                <option value="">Select Class</option>
+                                <% classLevels.forEach(function(classLevel) { %>
+                                    <option value="<%= classLevel %>">Grade <%= classLevel %></option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <select class="form-select" name="term" required>
+                                <option value="">Term</option>
+                                <% terms.forEach(function(term) { %>
+                                    <option value="<%= term %>">Term <%= term %></option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <select class="form-select" name="year" required>
+                                <option value="">Year</option>
+                                <% for(let year = currentYear - 2; year <= currentYear + 1; year++) { %>
+                                    <option value="<%= year %>" <%= year === currentYear ? 'selected' : '' %>>
+                                        <%= year %>
+                                    </option>
+                                <% } %>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-warning mt-3 w-100">
+                        <i class="bi bi-graph-up me-2"></i>
+                        Generate Ranking Report
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Subject Performance -->
+    <div class="col-md-6 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">
+                    <i class="bi bi-book-fill me-2 text-info"></i>
+                    Subject Performance
+                </h5>
+                <p class="card-text">Analyze subject-wise performance and grade distribution.</p>
+                
+                <form method="GET" action="/reports/subjects" class="mb-3">
+                    <div class="row g-2">
+                        <div class="col-12">
+                            <select class="form-select" name="class_level" required>
+                                <option value="">Select Class</option>
+                                <% classLevels.forEach(function(classLevel) { %>
+                                    <option value="<%= classLevel %>">Grade <%= classLevel %></option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <select class="form-select" name="term" required>
+                                <option value="">Term</option>
+                                <% terms.forEach(function(term) { %>
+                                    <option value="<%= term %>">Term <%= term %></option>
+                                <% }); %>
+                            </select>
+                        </div>
+                        <div class="col-6">
+                            <select class="form-select" name="year" required>
+                                <option value="">Year</option>
+                                <% for(let year = currentYear - 2; year <= currentYear + 1; year++) { %>
+                                    <option value="<%= year %>" <%= year === currentYear ? 'selected' : '' %>>
+                                        <%= year %>
+                                    </option>
+                                <% } %>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-info mt-3 w-100">
+                        <i class="bi bi-bar-chart me-2"></i>
+                        Generate Subject Report
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Quick Reports -->
+    <div class="col-md-8 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-lightning-charge-fill me-2"></i>
+                    Quick Reports
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <h6>Current Term Reports</h6>
+                        <div class="d-grid gap-2">
+                            <% classLevels.forEach(function(classLevel) { %>
+                                <a href="/reports/ranking?class_level=<%= classLevel %>&term=1&year=<%= currentYear %>" 
+                                   class="btn btn-outline-primary btn-sm">
+                                    Grade <%= classLevel %> Ranking - Term 1
+                                </a>
+                            <% }); %>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <h6>Class Grade Views</h6>
+                        <div class="d-grid gap-2">
+                            <% classLevels.forEach(function(classLevel) { %>
+                                <a href="/grades/class?class=<%= classLevel %>&term=1&year=<%= currentYear %>" 
+                                   class="btn btn-outline-success btn-sm">
+                                    Grade <%= classLevel %> Grades - Term 1
+                                </a>
+                            <% }); %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Export Options -->
+    <div class="col-md-4 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="bi bi-download me-2"></i>
+                    Export Options
+                </h5>
+            </div>
+            <div class="card-body">
+                <p class="card-text small text-muted">Export reports in various formats</p>
+                <div class="d-grid gap-2">
+                    <button class="btn btn-outline-success btn-sm" disabled>
+                        <i class="bi bi-file-earmark-excel me-2"></i>
+                        Excel Export
+                    </button>
+                    <button class="btn btn-outline-danger btn-sm" disabled>
+                        <i class="bi bi-file-earmark-pdf me-2"></i>
+                        PDF Export
+                    </button>
+                    <small class="text-muted">Available after generating reports</small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Report Features
+                </h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Student ranking by average score</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Subject-wise performance analysis</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Grade distribution statistics</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <ul class="list-unstyled">
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Class average calculations</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Export to Excel and PDF</li>
+                            <li><i class="bi bi-check-circle text-success me-2"></i>Historical data comparison</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
